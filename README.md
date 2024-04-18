@@ -1,10 +1,10 @@
 Mottura XNova kernel module
 ===========================
 
-This is a kernel module for the Mottura XNova lock.
-Bacause Mottura XNova goes to sleep after 3 sec, this module will keep it awake. By sending a keep alive signal every 2 sec.
-When lock is in sleep mode, it will not provide status information by output pins. Using this module we can read status of the lock at any time.
-Also this module will provide a way to open/close/autoclose the lock by sending a signal to the lock.
+This kernel module is designed for the Mottura XNova lock. The XNova lock enters sleep mode after 3 seconds of inactivity. To prevent this, our module sends a keep-alive signal every 2 seconds, ensuring the lock remains awake.
+When the lock is in sleep mode, it does not provide status information via its output pins. However, with this module, we can read the lock's status at any time.
+Additionally, this module provides functionality to open, close, or set the lock to autoclose by sending a specific signal to the lock.
+It's important to note that running similar programs in user-space could lead to the application being preempted or even killed by the Out-Of-Memory (OOM) killer. Running this as a kernel module ensures more reliable operation.
 
 Available commands:
 ```
@@ -21,6 +21,7 @@ GPIO configured for A1 A2 A3 pins. You can change it in the source code.
 
 
 **How to build and install**
+
 Prepare the kernel source code:
 ```
 apt update

@@ -49,8 +49,7 @@ static bool wakeup_pulse_period = false;
 // Mottura XNova goes to sleep after ~3 seconds. So we need to keep the device working.
 // To do this, we will use a timer that sends a pulse to the XNova every 2.5 seconds.
 // The pulse will be 60ms long.
-static void wakeup_time_func(struct timer_list *unused)
-{
+static void wakeup_time_func(struct timer_list *unused) {
     // Toggle wakeup pin
     gpiod_set_value(WAKEUP_GPIO, wakeup_pulse_period);
     wakeup_pulse_period = !wakeup_pulse_period;
@@ -159,8 +158,7 @@ static int init_gpio(struct gpio_desc **gpiod, int gpio_num) {
     return 0;
 }
 
-static int __init mottura_xnova_init(void)
-{
+static int __init mottura_xnova_init(void) {
     // Get the GPIO descriptor
     const char *gpio_err = "Failed to initialize GPIO";
     CHECK_ERROR(init_gpio(&xnova_open_gpio, MOTTURA_XNOVA_OPEN_GPIO), gpio_err);
@@ -180,8 +178,7 @@ static int __init mottura_xnova_init(void)
     return 0;
 }
 
-static void __exit mottura_xnova_exit(void)
-{
+static void __exit mottura_xnova_exit(void) {
     // Cancel work
     cancel_work_sync(&pulse_work);
 
