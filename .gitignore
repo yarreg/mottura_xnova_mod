@@ -1,0 +1,11 @@
+.docker
+*.mod
+*.ko
+*.o
+.Modueles
+.Module.*
+.modules.*
+Module.symvers
+modules.*
+.mottura*
+*.mod.c

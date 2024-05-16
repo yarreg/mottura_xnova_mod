@@ -1,0 +1,20 @@
+{
+    "name": "Mottura XNova mod",
+    "dockerFile": "Dockerfile",
+    "context": "..",
+    "runArgs": [
+        "-v", "${localWorkspaceFolder}:/workspace:cached"
+    ],
+    "workspaceFolder": "/workspace",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.makefile-tools",
+                "ms-azuretools.vscode-docker"
+            ],
+            "settings": {
+                "terminal.integrated.shell.linux": "/bin/bash"
+            }
+        }
+    }
+}
