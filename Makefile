@@ -10,3 +10,6 @@ clean:
 
 deploy:
 	scp mottura_xnova.ko root@$(HOST):/lib/modules/5.10.35-wb159+wb1/
+
+format:
+	clang-format -i *.c -style=file:$(KDIR)/.clang-format
