@@ -14,9 +14,9 @@
 #define WAKEUP_GPIO close_gpio
 
 // Module parameters
-static int open_gpio_num = 79;
-static int close_gpio_num = 80;
-static int autoclose_gpio_num = 81;
+static int open_gpio_num = 133;
+static int close_gpio_num = 119;
+static int autoclose_gpio_num = 201;
 static int pulse_duration = 60;   // ms
 static int pulse_interval = 2500; // ms
 
@@ -39,7 +39,8 @@ static struct gpio_desc *pulse_work_gpio;
 
 // Timer and workqueue structures
 static struct timer_list wakeup_timer;
-static struct work_struct pulse_work;
+static struct work_struct pulse_on_work;
+static struct delayed_work pulse_off_work;
 
 // Character device structures
 static dev_t dev_num;
@@ -70,12 +71,17 @@ static void wakeup_time_func(struct timer_list *unused) {
   mod_timer(&wakeup_timer, wakeup_timer.expires);
 }
 
-// Workqueue function to send a pulse
-static void pulse_work_func(struct work_struct *ws) {
+// Workqueue: assert pulse immediately
+static void pulse_on_work_func(struct work_struct *ws) {
   gpiod_set_value(pulse_work_gpio, 1);
-  msleep(1000);
+  schedule_delayed_work(&pulse_off_work, msecs_to_jiffies(1000));
+}
+
+// Workqueue: deassert pulse after delay
+static void pulse_off_work_func(struct work_struct *ws) {
   gpiod_set_value(pulse_work_gpio, 0);
 
+  // Activate periodic wake pulses after command pulse
   mod_timer(&wakeup_timer, jiffies + msecs_to_jiffies(2000));
 }
 
@@ -106,10 +112,17 @@ static ssize_t xnova_write(struct file *file, const char __user *buf,
   if (!gpio)
     return -EINVAL;
 
+  // Stop background wake pulses while command is active
   del_timer_sync(&wakeup_timer);
 
+  // Cancel any in-flight pulse jobs to avoid overlap 
+  cancel_work_sync(&pulse_on_work);
+  cancel_delayed_work_sync(&pulse_off_work);
+
   pulse_work_gpio = gpio;
-  schedule_work(&pulse_work);
+ 
+  // Start immediate ON; OFF will be queued as delayed_work
+  schedule_work(&pulse_on_work);
 
   return count;
 }
@@ -137,7 +150,9 @@ static int create_chrdev(const char *name) {
   }
 
   device_create(xnova_class, NULL, dev_num, NULL, name);
-  INIT_WORK(&pulse_work, pulse_work_func);
+
+  INIT_WORK(&pulse_on_work, pulse_on_work_func);
+  INIT_DELAYED_WORK(&pulse_off_work, pulse_off_work_func);
 
   return 0;
 }
@@ -145,12 +160,10 @@ static int create_chrdev(const char *name) {
 // Initialize GPIO
 static int init_gpio(struct gpio_desc **gpiod, int gpio_num) {
   *gpiod = gpio_to_desc(gpio_num);
-  if (IS_ERR(*gpiod)) {
-    pr_err(MODULE_NAME ": Failed to get GPIO descriptor: %ld\n",
-           PTR_ERR(*gpiod));
-    return PTR_ERR(*gpiod);
+  if (gpiod == NULL) {
+	pr_err(MODULE_NAME ": GPIO %d not found\n", gpio_num);
+	return -ENODEV;
   }
-
   CHECK_ERROR(gpiod_direction_output(*gpiod, 0),
               "Failed to set GPIO as output");
 
@@ -180,7 +193,9 @@ static int __init mottura_xnova_init(void) {
 
 // Module cleanup function
 static void __exit mottura_xnova_exit(void) {
-  cancel_work_sync(&pulse_work);
+  // cancel_work_sync(&pulse_work);
+  cancel_work_sync(&pulse_on_work);
+  cancel_delayed_work_sync(&pulse_off_work);
   del_timer_sync(&wakeup_timer);
 
   gpiod_set_value(open_gpio, 0);
@@ -202,7 +217,7 @@ static void __exit mottura_xnova_exit(void) {
 
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("Mottura XNova GPIO Control Module");
-MODULE_VERSION("1.0");
+MODULE_VERSION("1.1");
 
 module_init(mottura_xnova_init);
 module_exit(mottura_xnova_exit);
