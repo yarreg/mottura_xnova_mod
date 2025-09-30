@@ -9,7 +9,7 @@ clean:
 	make -C $(KDIR) M=$(PWD) clean
 
 deploy:
-	scp mottura_xnova.ko root@$(HOST):/lib/modules/5.10.35-wb159+wb1/
+	scp mottura_xnova.ko root@$(HOST):/lib/modules/$(shell uname -r)/
 
 format:
 	clang-format -i *.c -style=file:$(KDIR)/.clang-format

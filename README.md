@@ -16,33 +16,25 @@ echo "autoclose" > /dev/mottura_xnova
 
 ```
 
-THis module do for WirenBoard 6.5. It may work on other devices, but not tested.
+THis module do for WirenBoard 8. It may work on other devices, but not tested.
 GPIO configured for A1 A2 A3 pins. You can change it in the source code.
 
 
-**How to build and install**
+**How to build and install on WirenBoard 8**
 
 Prepare the kernel source code:
 ```
 apt update
 apt install build-essential libncurses5-dev fakeroot lzop bc git bison flex libssl-dev rsync
-apt install gcc-arm-linux-gnueabihf
+apt install linux-headers
 
-cd ~
-git clone https://github.com/wirenboard/linux
-cd linux
-git submodule update --init --recursive
 
-export KDIR=~/linux
-export ARCH=arm
-export CROSS_COMPILE=arm-linux-gnueabihf-
-export KBUILD_OUTPUT=.build-wb6
-
-make prepare
-```
-
-Build the module:
-```
-cd ~/mottura_xnova
+git clone https://github.com/yarreg/mottura_xnova_mod
+cd mottura_xnova_mod
 make
+cp mottura_xnova.ko /lib/modules/$(uname -r)/
+depmod -a
+modprobe mottura_xnova
+
+echo "mottura_xnova" > /etc/modules-load.d/mottura_xnova.conf
 ```
