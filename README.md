@@ -16,7 +16,7 @@ echo "autoclose" > /dev/mottura_xnova
 
 ```
 
-THis module do for WirenBoard 8. It may work on other devices, but not tested.
+This module do for WirenBoard 8. It may work on other devices, but not tested.
 GPIO configured for A1 A2 A3 pins. You can change it in the source code.
 
 
