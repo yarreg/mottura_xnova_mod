@@ -9,4 +9,4 @@ Module.symvers
 modules.*
 .mottura*
 *.mod.c
-linux/
+kernel-headers/

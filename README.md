@@ -20,19 +20,40 @@ This module do for WirenBoard 8. It may work on other devices, but not tested.
 GPIO configured for A1 A2 A3 pins. You can change it in the source code.
 
 
-**How to build and install on WirenBoard 8**
+**Build and install**
 
-Prepare the kernel source code:
+### Cross-compilation (recommended)
+
+Build on an x86 machine with cross-compilation for WirenBoard 8 (ARM64):
+
 ```
-apt update
-apt install build-essential libncurses5-dev fakeroot lzop bc git bison flex libssl-dev rsync
-apt install linux-headers
-
+# Install cross-compiler
+apt install gcc-aarch64-linux-gnu
 
 git clone https://github.com/yarreg/mottura_xnova_mod
 cd mottura_xnova_mod
-make
-cp mottura_xnova.ko /lib/modules/$(uname -r)/
+
+# KERNEL_VERSION must match the kernel version on the target device
+make KERNEL_VERSION=6.8.0-wb153
+
+# Copy module and run depmod on the target device
+make deploy HOST=192.168.0.102
+```
+
+The Makefile automatically downloads the required kernel headers from `deb.wirenboard.com`.
+Override variables as needed:
+- `KERNEL_VERSION` — kernel version (default `6.8.0-wb153`)
+- `HOST` — target device IP (default `192.168.0.102`)
+
+### Native build (on WirenBoard itself)
+
+```
+apt install build-essential linux-headers-$(uname -r)
+
+git clone https://github.com/yarreg/mottura_xnova_mod
+cd mottura_xnova_mod
+make ARCH=arm64 CROSS_COMPILE=
+cp mottura_xnova.ko /lib/modules/$(uname -r)/extra/
 depmod -a
 modprobe mottura_xnova
 
